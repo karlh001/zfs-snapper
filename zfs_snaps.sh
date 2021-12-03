@@ -1,6 +1,6 @@
 #!/bin/bash
 # By Karl Hunter 2021
-# Version 0.1.3 dated 20211203
+# Version 0.1.4 dated 20211203
 # Snapshot ZFS pool
 
 #################################
@@ -12,17 +12,24 @@
 
 # DATASET
 # Edit the name of the pool and dataset you wish
-# to snapshot. This can be the entire pool, e.g. 
+# to snapshot. This can be the entire pool, e.g.
 # DATASET=pool
 # Where pool is the name of your ZFS pool
 # Or, a dataset within the pool, e.g.
-# DATASET=pool/test
+# Default DATASET=pool/test
 DATASET=pool/test
 
 # VERSION HISTORY
 # Choose here how many versions you wish to keep
-# Default is 10
+# Default VER=10
 VER=5
+
+# Temp file
+# Where can temporary files be stored
+# Add trailing /
+# Default TEMPF=/tmp/
+TEMPF=/tmp/
+
 
 # *** DO NOT EDIT AFTER THIS LINE ***
 
@@ -62,6 +69,7 @@ if grep -q $NCOUNT  "$COUNTER";
 then
 
 # Creates the snapshot with timestamp
+# Adds auto to snapshot name to prevent deletion of manual snapshots
 zfs snapshot -r ${DATASET}@Auto_${CDATE}.$NCOUNT
 
 # Deletes snapshots
@@ -70,7 +78,19 @@ One=$VER
 Two=1
 SNAPKEEP="$((One+Two))"
 
-#Execute delete
+# Check if return less than user-define
+# Fixes zfs error if no snapshots to delete
+
+# Execute delete
+# Output snapshots to filter
+zfs list -t snapshot -o name ${DATASET} > ${TEMPF}ZFS-snaps_output.tmp
+
+# Output number result
+grep ${DATASET}@Auto ${TEMPF}ZFS-snaps_output.tmp | wc -l > /tmp/ZFS-snaps_output_result.tmp
+
+# If the snapshot count is less than the user-defined version then skip deletion
+
+
 zfs list -t snapshot -o name | grep ^${DATASET}@Auto | tac | tail -n +${SNAPKEEP} | xargs -n 1 zfs destroy -r
 
 #Success
