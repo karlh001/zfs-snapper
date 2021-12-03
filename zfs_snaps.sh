@@ -22,7 +22,7 @@ DATASET=pool/test
 # VERSION HISTORY
 # Choose here how many versions you wish to keep
 # Default is 10
-VER=10
+VER=5
 
 # *** DO NOT EDIT AFTER THIS LINE ***
 
@@ -49,7 +49,7 @@ echo "Error: could not find counter file. Please see README"
 exit
 fi
 
-# Add 1 to the last number 
+# Add 1 to the last number
 num1=$LASTNUMBER
 num2=1
 NCOUNT="$((num1+num2))"
@@ -62,19 +62,19 @@ if grep -q $NCOUNT  "$COUNTER";
 then
 
 # Creates the snapshot with timestamp
-zfs snapshot -r ${DATASET}@${CDATE}.$NCOUNT
+zfs snapshot -r ${DATASET}@Auto_${CDATE}.$NCOUNT
 
-# Get list of snapshots from dataset
-# Only include name column for array
-# Using -o name switch
-IFS$
-SNAPS=$(zfs list -r -t snapshot -o name ${DATASET})
-echo $SNAPS | awk '{ print $2 }'
-unset IFS
+# Deletes snapshots
+# Add 1 to user to tatal bug fix
+One=$VER
+Two=1
+SNAPKEEP="$((One+Two))"
 
+#Execute delete
+zfs list -t snapshot -o name | grep ^${DATASET}@Auto | tac | tail -n +${SNAPKEEP} | xargs -n 1 zfs destroy -r
 
 #Success
-echo "Complete"
+echo "Complete with no errors"
 else
 echo "Error: Counter file failed to update. See README"
 exit
