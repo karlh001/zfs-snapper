@@ -1,6 +1,6 @@
 #!/bin/bash
 # By Karl Hunter 2021
-# Version 0.1.1 dated 20211202
+# Version 0.1.3 dated 20211203
 # Snapshot ZFS pool
 
 #################################
@@ -45,7 +45,7 @@ LASTNUMBER=$(head -n 1 $COUNTER)
 else
 # Could not find counter file
 # Fatal error quits
-echo "Error: could not find counter file. Please refer to manual"
+echo "Error: could not find counter file. Please see README"
 exit
 fi
 
@@ -61,13 +61,22 @@ echo $NCOUNT >| $COUNTER
 if grep -q $NCOUNT  "$COUNTER";
 then
 
-echo "Yes added"
-
 # Creates the snapshot with timestamp
 zfs snapshot -r ${DATASET}@${CDATE}.$NCOUNT
 
+# Get list of snapshots from dataset
+# Only include name column for array
+# Using -o name switch
+IFS$
+SNAPS=$(zfs list -r -t snapshot -o name ${DATASET})
+echo $SNAPS | awk '{ print $2 }'
+unset IFS
+
+
+#Success
+echo "Complete"
 else
-echo "Error: Counter file failed to update. See manual"
+echo "Error: Counter file failed to update. See README"
 exit
 fi
 
