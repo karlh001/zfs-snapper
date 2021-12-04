@@ -1,6 +1,6 @@
 #!/bin/bash
 # By Karl Hunter 2021
-# Version 0.1.4 dated 20211203
+# Version 0.1.5 dated 20211204
 # Snapshot ZFS pool
 
 #################################
@@ -17,7 +17,7 @@
 # Where pool is the name of your ZFS pool
 # Or, a dataset within the pool, e.g.
 # Default DATASET=pool/test
-DATASET=pool/test
+DATASET=pool/test3
 
 # VERSION HISTORY
 # Choose here how many versions you wish to keep
@@ -30,13 +30,18 @@ VER=5
 # Default TEMPF=/tmp/
 TEMPF=/tmp/
 
+# Output file
+# This is the name of the temp file
+# Default OPF=ZFS-snap
+# Default OPR=ZFS-snap-res
+OPF=ZFS-snap
+OPR=ZFS-res
 
 # *** DO NOT EDIT AFTER THIS LINE ***
 
 # Get today date and time for snapshot name
 # As YearMonthDayHourMinute
 CDATE=`date +"%Y%m%d%H%M"`
-
 
 # Check if hour snapshot is required
 # Clean up oldest snapshot:
@@ -83,15 +88,19 @@ SNAPKEEP="$((One+Two))"
 
 # Execute delete
 # Output snapshots to filter
-zfs list -t snapshot -o name ${DATASET} > ${TEMPF}ZFS-snaps_output.tmp
+zfs list -t snapshot -o name ${DATASET} > ${TEMPF}${OPF}
 
 # Output number result
-grep ${DATASET}@Auto ${TEMPF}ZFS-snaps_output.tmp | wc -l > /tmp/ZFS-snaps_output_result.tmp
+grep ${DATASET}@Auto ${TEMPF}${OPF} | wc -l > ${TEMPF}${OPR}
 
 # If the snapshot count is less than the user-defined version then skip deletion
-
-
+CHECKRES=$(${TEMPF}${OPR})
+echo $CHECKERS
+if $CHECKRES > $VER
+then
+# Cycles through and deletes snapshots
 zfs list -t snapshot -o name | grep ^${DATASET}@Auto | tac | tail -n +${SNAPKEEP} | xargs -n 1 zfs destroy -r
+fi
 
 #Success
 echo "Complete with no errors"
