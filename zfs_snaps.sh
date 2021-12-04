@@ -16,13 +16,13 @@
 # DATASET=pool
 # Where pool is the name of your ZFS pool
 # Or, a dataset within the pool, e.g.
-# Default DATASET=pool/test
-DATASET=pool/test3
+# Default DATASET=poolname/dataset
+DATASET=change_me
 
 # VERSION HISTORY
 # Choose here how many versions you wish to keep
 # Default VER=10
-VER=5
+VER=10
 
 # Temp file
 # Where can temporary files be stored
@@ -95,7 +95,7 @@ grep ${DATASET}@Auto ${TEMPF}${OPF} | wc -l > ${TEMPF}${OPR}
 
 # If the snapshot count is less than the user-defined version then skip deletion
 CHECKRES=$(${TEMPF}${OPR})
-echo $CHECKERS
+
 if $CHECKRES > $VER
 then
 # Cycles through and deletes snapshots
