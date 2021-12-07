@@ -1,6 +1,6 @@
 #!/bin/bash
 # By Karl Hunter 2021
-# Version 0.1.5 dated 20211204
+# Version 0.1.6 dated 20211207
 # Snapshot ZFS pool
 
 #################################
@@ -17,7 +17,7 @@
 # Where pool is the name of your ZFS pool
 # Or, a dataset within the pool, e.g.
 # Default DATASET=poolname/dataset
-DATASET=change_me
+DATASET=pool/test
 
 # VERSION HISTORY
 # Choose here how many versions you wish to keep
@@ -28,14 +28,8 @@ VER=10
 # Where can temporary files be stored
 # Add trailing /
 # Default TEMPF=/tmp/
-TEMPF=/tmp/
+TEMPF=/tmp/zfssnap.tmp
 
-# Output file
-# This is the name of the temp file
-# Default OPF=ZFS-snap
-# Default OPR=ZFS-snap-res
-OPF=ZFS-snap
-OPR=ZFS-res
 
 # *** DO NOT EDIT AFTER THIS LINE ***
 
@@ -45,7 +39,6 @@ CDATE=`date +"%Y%m%d%H%M"`
 
 # Check if hour snapshot is required
 # Clean up oldest snapshot:
-
 # Get counter
 # Checks if regular file exists
 COUNTER=count
@@ -77,7 +70,8 @@ then
 # Adds auto to snapshot name to prevent deletion of manual snapshots
 zfs snapshot -r ${DATASET}@Auto_${CDATE}.$NCOUNT
 
-# Deletes snapshots
+# DELETE SNAPSHOT SCRIPT
+
 # Add 1 to user to tatal bug fix
 One=$VER
 Two=1
@@ -88,18 +82,20 @@ SNAPKEEP="$((One+Two))"
 
 # Execute delete
 # Output snapshots to filter
-zfs list -t snapshot -o name ${DATASET} > ${TEMPF}${OPF}
+zfs list -t snapshot -o name ${DATASET} > ${TEMPF}
 
 # Output number result
-grep ${DATASET}@Auto ${TEMPF}${OPF} | wc -l > ${TEMPF}${OPR}
+RESULT=$(grep ${DATASET}@Auto ${TEMPF} | wc -l)
 
-# If the snapshot count is less than the user-defined version then skip deletion
-CHECKRES=$(${TEMPF}${OPR})
 
-if $CHECKRES > $VER
-then
+# If the snapshot count is less than the user-defined version then skip
+if [$RESULT > $VER]; then
 # Cycles through and deletes snapshots
 zfs list -t snapshot -o name | grep ^${DATASET}@Auto | tac | tail -n +${SNAPKEEP} | xargs -n 1 zfs destroy -r
+echo "Snapshot rotation has deleted snapshots; to retain last" ${VER}
+else
+# Info to user to inform no snapshots to delete
+echo "No snapshots removed due to being less than rotation. You wish to keep" $VER
 fi
 
 #Success
