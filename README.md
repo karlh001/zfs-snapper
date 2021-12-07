@@ -1,4 +1,5 @@
 # ZFS Snapper
+Read me v.2
 
 ## About
 
@@ -31,11 +32,8 @@ Above command will run hourly.
 
 ## How It Works
 
-* Checks if "count" file exists
-* Reads last snapshot number
-* Adds one to last number
 * Creates snapshot
-* Checks if snapshots need removing
+* Checks if snapshots need removing; counts all snapshots starting with 'Auto'
 * Deletes all snapshots with then "Auto" until last n defined remain
 
 ## Snapshots
@@ -43,10 +41,9 @@ Above command will run hourly.
 Snapshots are named:
 
 ```
-Auto_YYYYMMDD.X
+Auto_YYYYMMDD_HHMMSS
 ```
 
-Where X is incremental number
 
 ## Options
 
@@ -66,22 +63,10 @@ Default is 10.
 ## Temp file
 
 Where can temporary files be stored? This allows the script to output to files.
-E.g. TEMPF=/tmp/
-Remember to add / to the end.
-You do not need to change this option
+E.g. TEMPF=/tmp/name-of-file
+You do not need to change this option if you do not wish.
 
 ## Output file
 
 This is the name of the temp file. You can leave this default unless your are experiencing problems with its file name.
 
-## Errors Codes
-
-### Could not find counter file. Please see README
-
-Create an empty file named "count" in the same directory of the script, otherwise define its location in the script's options section
-
-To create empty file, use touch command:
-
-```
-touch /foo/bar/count
-```
