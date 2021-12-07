@@ -1,6 +1,7 @@
 #!/bin/bash
 # By Karl Hunter 2021
-# Version 0.1.6 dated 20211207
+# Version 0.1.7 dated 20211207
+# https://github.com/karlh001
 # Snapshot ZFS pool
 
 #################################
@@ -16,7 +17,7 @@
 # DATASET=pool
 # Where pool is the name of your ZFS pool
 # Or, a dataset within the pool, e.g.
-# Default DATASET=poolname/dataset
+# poolname/dataset
 DATASET=pool/test
 
 # VERSION HISTORY
@@ -30,68 +31,32 @@ VER=10
 # Default TEMPF=/tmp/
 TEMPF=/tmp/zfssnap.tmp
 
-
 # *** DO NOT EDIT AFTER THIS LINE ***
 
 # Get today date and time for snapshot name
 # As YearMonthDayHourMinute
-CDATE=`date +"%Y%m%d%H%M"`
+CDATE=`date +"%Y%m%d_%H%M%S"`
 
-# Check if hour snapshot is required
-# Clean up oldest snapshot:
-# Get counter
-# Checks if regular file exists
-COUNTER=count
-if [ -f "$COUNTER" ]; then
-
-# Reads the file to get last back-up number
-LASTNUMBER=$(head -n 1 $COUNTER)
-
-else
-# Could not find counter file
-# Fatal error quits
-echo "Error: could not find counter file. Please see README"
-exit
-fi
-
-# Add 1 to the last number
-num1=$LASTNUMBER
-num2=1
-NCOUNT="$((num1+num2))"
-
-# Save new number to counter file
-echo $NCOUNT >| $COUNTER
-
-# Check if new number was added
-if grep -q $NCOUNT  "$COUNTER";
-then
-
+# It's snappy time
 # Creates the snapshot with timestamp
 # Adds auto to snapshot name to prevent deletion of manual snapshots
-zfs snapshot -r ${DATASET}@Auto_${CDATE}.$NCOUNT
+zfs snapshot -r ${DATASET}@Auto_${CDATE}
 
-# DELETE SNAPSHOT SCRIPT
-
-# Add 1 to user to tatal bug fix
-One=$VER
-Two=1
-SNAPKEEP="$((One+Two))"
-
+# Run snapshot rotation
 # Check if return less than user-define
-# Fixes zfs error if no snapshots to delete
-
 # Execute delete
-# Output snapshots to filter
+# Output snapshots to filter; gets ZFS snapshot list
 zfs list -t snapshot -o name ${DATASET} > ${TEMPF}
 
-# Output number result
+# Output number result into variable
 RESULT=$(grep ${DATASET}@Auto ${TEMPF} | wc -l)
 
-
 # If the snapshot count is less than the user-defined version then skip
-if [$RESULT > $VER]; then
+# Add one to user-defined variable to fix one less bug
+KEEP=$(($VER+1))
+if [ $RESULT -gt $VER ]; then
 # Cycles through and deletes snapshots
-zfs list -t snapshot -o name | grep ^${DATASET}@Auto | tac | tail -n +${SNAPKEEP} | xargs -n 1 zfs destroy -r
+zfs list -t snapshot -o name | grep ^${DATASET}@Auto | tac | tail -n +${KEEP} | xargs -n 1 zfs destroy -r
 echo "Snapshot rotation has deleted snapshots; to retain last" ${VER}
 else
 # Info to user to inform no snapshots to delete
@@ -100,9 +65,5 @@ fi
 
 #Success
 echo "Complete with no errors"
-else
-echo "Error: Counter file failed to update. See README"
-exit
-fi
 
 # End
